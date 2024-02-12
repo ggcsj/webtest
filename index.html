@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跑酷排名</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #555; /* 加深表格边框颜色 */
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 25%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 36px;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 弹窗样式 */
+        .modal {
+            display: none; /* 默认隐藏弹窗 */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px; /* 添加圆角 */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 添加阴影效果 */
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            position: relative; /* 相对定位，用于定位关闭按钮 */
+        }
+
+        .close {
+            color: #aaa;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s; /* 添加颜色过渡效果 */
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .highlight {
+            background-color: orange;
+        }
+
+        /* 搜索样式 */
+        #searchContainer {
+            text-align: center; /* 居中显示 */
+            margin-top: 20px;
+        }
+
+        #searchInput {
+            padding: 5px 10px;
+            border: none;
+            border-bottom: 2px solid #555;
+            font-size: 16px;
+            margin-right: 10px;
+            border-radius: 5px; /* 添加圆角 */
+        }
+
+        #searchBtn {
+            padding: 5px 10px;
+            background-color: #555;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px; /* 添加圆角 */
+        }
+
+
+        #searchBtn:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 弹窗部分 -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>欢迎来到跑酷排名！</p>
+        </div>
+    </div>
+
+    <h2>跑酷排名</h2>
+
+    <p style="text-align: center; font-size: 14px; color: #575757;">数据实时更新中...</p>
+
+    <div id="searchContainer">
+        <input type="text" id="searchInput" placeholder="点我搜索，快速找到">
+        <button id="searchBtn">搜索</button>
+    </div>
+
+    <table id="rankings">
+        <tr>
+            <th>排名</th>
+            <th>头像</th>
+            <th>姓名</th>
+            <th>测试分数</th>
+            <th>时间分数</th>
+            <th>死亡次数</th>
+            <th>最终分数</th>
+        </tr>
+        <!-- 排名将在这里插入 -->
+    </table>
+
+    <footer>
+        &copy; 2024 跑酷排名。保留所有权利。
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从JSON文件中获取数据
+            fetch('final_calculated_scores.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('File not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 根据最终分数对数组进行降序排序
+                    data.sort((a, b) => b.final_score - a.final_score);
+
+                    // 选择表格元素
+                    const tableBody = document.getElementById('rankings');
+
+                    // 遍历每个玩家并向表格添加一行
+                    data.forEach((player, index) => {
+                        // 创建新行
+                        const tr = document.createElement('tr');
+                        // 添加表格单元格
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td class="avatar-col">
+                                <img class="avatar" src="https://minotar.net/avatar/${player.Name}" alt="avatar">
+                            </td>
+                            <td>${player.Name}</td>
+                            <td>${player.test}</td>
+                            <td>${player.time}</td>
+                            <td>${player.deathcount}</td>
+                            <td>${player.final_score.toFixed(1)}</td>
+                        `;
+                        // 将行追加到表格中
+                        tableBody.appendChild(tr);
+                    });
+                })
+                .catch(error => {
+                    console.error('无法加载JSON', error);
+                    display404Page(); // 显示404页面
+                });
+
+            function display404Page() {
+                const tableBody = document.getElementById('rankings');
+                tableBody.innerHTML = '<tr><td colspan="7">404 - 文件未找到</td></tr>';
+            }
+
+            // 获取搜索按钮和搜索输入框元素
+            const searchBtn = document.getElementById('searchBtn');
+            const searchInput = document.getElementById('searchInput');
+
+            // 搜索按钮点击事件
+            searchBtn.addEventListener('click', function() {
+                const searchTerm = searchInput.value.trim().toLowerCase(); // 获取输入框的值并转换为小写
+
+                // 遍历表格每一行，查找匹配的姓名
+                const rows = document.querySelectorAll('#rankings tr');
+                let found = false; // 是否找到匹配结果的标志
+
+                for (let i = 1; i < rows.length; i++) { // 从第二行开始遍历，跳过表头
+                    const nameCell = rows[i].querySelector('td:nth-child(3)'); // 获取姓名单元格的元素
+
+                    if (nameCell.textContent.toLowerCase() === searchTerm) {
+                        // 找到完全匹配的姓名，滚动到该行并高亮显示
+                        rows.forEach(row => {
+                            row.classList.remove('highlight'); // 取消之前的高亮
+                        });
+                        rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        rows[i].classList.add('highlight');
+                        found = true; // 设置找到标志为true
+                        break; // 停止循环
+                    }
+                }
+
+                if (!found) {
+                    alert('没有找到匹配的结果'); // 若未找到匹配结果，则弹出提示框
+                }
+            });
+
+
+            // 弹窗相关代码
+            const modal = document.getElementById('myModal'); // 获取弹窗元素
+            const span = document.getElementsByClassName('close')[0]; // 获取关闭按钮元素
+
+            // 点击弹窗以外的区域时，关闭弹窗
+            window.addEventListener('click', function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // 点击关闭按钮时，关闭弹窗
+            span.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            // 页面加载完成后显示弹窗
+            modal.style.display = 'block';
+        });
+    </script>
+</body>
+
+</html>
